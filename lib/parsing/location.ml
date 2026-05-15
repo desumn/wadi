@@ -1,9 +1,9 @@
 
 type t = { start : Lexing.position; end_ : Lexing.position;  }
 
-let make start end_ = {start; end_}
+let make (start, end_) = {start; end_}
 
-let from_lexbuf (lexbuf : Lexing.lexbuf) = make lexbuf.lex_start_p lexbuf.lex_curr_p
+let from_lexbuf (lexbuf : Lexing.lexbuf) = make (lexbuf.lex_start_p, lexbuf.lex_curr_p)
 
 let pp ppf loc =
   Fmt.pf ppf "%s: %d:%d-%d:%d"
