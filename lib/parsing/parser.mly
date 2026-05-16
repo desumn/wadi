@@ -1,4 +1,5 @@
 %{
+open StdLabels
 open Ast
 %}
 %token <int> Int
@@ -16,11 +17,6 @@ open Ast
 
 %token Eof
 
-%nonassoc App_
-%nonassoc LetBody
-%left Plus Minus
-%left Star Slash
-
 %start <expr> program
 
 %%
@@ -35,16 +31,45 @@ let program :=
   | ~ = located_expr(expr); Eof; <>
 
 let expr :=
+  | ~ = open_expr; <>
+  | ~ = additive; <>
+
+let open_expr :=
+  | Let; is_rec = option_bool(Rec); name = Ident; "=";
+    value = located_expr(expr); In; body = located_expr(expr);
+    {Let (name, value, body, is_rec)}
+  | Let; is_rec = option_bool(Rec); name = Ident; args = Ident*; "=";
+    value = located_expr(expr); In; body = located_expr(expr);
+    {
+      let value = List.fold_right args ~init:value
+        ~f:(fun arg value -> {value with desc = Lambda(arg, value)})
+      in
+      Let (name, value, body, is_rec)
+    }
+  | Fun; param = Ident; "->"; body = located_expr(expr); <Lambda>
+
+%inline binop_add:
+  | "+"; { fun l r -> Add (l, r) }
+  | "-"; { fun l r -> Sub (l, r) }
+%inline binop_mul:
+  | "*"; { fun l r -> Mul (l, r) }
+  | "/"; { fun l r -> Div (l, r) }
+
+let additive :=
+  | l = located_expr(additive); op = binop_add; r = located_expr(multiplicative);
+    { op l r }
+  | ~ = multiplicative; <>
+
+let multiplicative :=
+  | l = located_expr(multiplicative); op = binop_mul; r = located_expr(app_expr);
+    { op l r }
+  | ~ = app_expr; <>
+
+let app_expr :=
+  | f = located_expr(app_expr); arg = located_expr(atom_expr); <App>
+  | ~ = atom_expr; <>
+
+let atom_expr :=
   | name = Ident; <Var>
   | num = Int; <Int>
-  | left = located_expr(expr); "+"; right = located_expr(expr); <Add>
-  | left = located_expr(expr); "-"; right = located_expr(expr); <Sub>
-  | left = located_expr(expr); "*"; right = located_expr(expr); <Mul>
-  | left = located_expr(expr); "/"; right = located_expr(expr); <Div>
-  | Let; is_rec = option_bool(Rec); name = Ident; "="; expr = located_expr(expr);
-      In; body = located_expr(expr); %prec LetBody {Let(name, expr, body, is_rec)}
-  | on = located_expr(expr); value = located_expr(expr); %prec App_ <App>
-  | Fun; param = Ident; "->"; body = located_expr(expr); <Lambda>
-  | "("; expr = expr; ")"; <>
-
-
+  | "("; e = expr; ")"; <>
