@@ -81,12 +81,12 @@ let rec eval_expr env (expr : Parsing.Ast.expr) =
       eval_expr new_env body
   | LetRec (name, value, body) ->
       let* value = eval_expr env value in
-      let new_env =
-        match value with
+      begin match value with
         | Closure closure ->
-            Env.add name (Closure { closure with name = Some name }) env
-        | _ -> Env.add name value env in
-      eval_expr new_env body
+          let new_env = Env.add name (Closure { closure with name = Some name }) env in
+          eval_expr new_env body
+        | _ -> Error Invalid_rec
+      end
   | App (on, value) ->
       let* on = eval_expr env on in
       let* value = eval_expr env value in

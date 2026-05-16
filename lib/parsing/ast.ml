@@ -55,7 +55,7 @@ let rec pp_expr_at level ppf expr =
       Fmt.pf ppf "@[<2>let %s = %a@ in@ %a@]" name (pp_expr_at 0) value
         (pp_expr_at 0) body
   | LetRec (name, value, body) ->
-      Fmt.pf ppf "@[<2>let %s = %a@ in@ %a@]" name (pp_expr_at 0) value
+      Fmt.pf ppf "@[<2>let rec %s = %a@ in@ %a@]" name (pp_expr_at 0) value
         (pp_expr_at 0) body
   | App (func, value) ->
       paren_if (level > app_level) ppf @@ fun () ->
