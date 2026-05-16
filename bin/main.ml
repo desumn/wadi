@@ -26,7 +26,7 @@ let parse_and_execute file =
           Fmt.pr "=> %a@." Eval.pp_value i;
           Cmd.Exit.ok
       | Error err ->
-          Fmt.epr "error: %a" Eval.pp_error err;
+          Fmt.epr "error: %a@." Eval.pp_error err;
           Cmd.Exit.some_error
       end
   | Error (`Msg error_message) ->
