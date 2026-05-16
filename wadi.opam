@@ -17,6 +17,7 @@ depends: [
   "fmt"
   "menhir"
   "menhirLib"
+  "alcotest" {with-testing}
   "odoc" {with-doc}
 ]
 build: [

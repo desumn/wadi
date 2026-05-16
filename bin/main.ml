@@ -25,8 +25,8 @@ let parse_and_execute file =
   | Ok ast ->
       begin match Eval.eval_expr Eval.Env.empty ast with
       | Ok i -> Fmt.pr "=> %d" i; Cmd.Exit.ok
-      | Error `Divide_by_zero -> Fmt.epr "error: division by zero"; Cmd.Exit.some_error
-      | Error (`Unbound_variable var) -> Fmt.epr "error: variable %s is unbound" var; Cmd.Exit.some_error
+      | Error Divide_by_zero -> Fmt.epr "error: division by zero"; Cmd.Exit.some_error
+      | Error (Unbound_variable var) -> Fmt.epr "error: variable %s is unbound" var; Cmd.Exit.some_error
       end
   | Error `Msg error_message ->
     Fmt.epr "%s" error_message; Cmd.Exit.some_error

@@ -21,4 +21,11 @@
   "A capability-based scripting language embeddable in OCaml programs.")
  (description
   "A capability-based scripting language embeddable in OCaml programs.")
- (depends ocaml cmdliner bos fmt menhir menhirLib))
+ (depends
+  ocaml
+  cmdliner
+  bos
+  fmt
+  menhir
+  menhirLib
+  (alcotest :with-testing)))
