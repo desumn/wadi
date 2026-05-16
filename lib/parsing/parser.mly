@@ -1,9 +1,14 @@
 %{
 open StdLabels
 open Ast
+
+let located_bool b loc = { desc = Bool b; loc = Location.make loc }
+
+
 %}
 %token <int> Int
 %token <string> Ident
+%token <bool> Bool
 
 %token ParenOpen "(" ParenClose ")"
 
@@ -11,7 +16,13 @@ open Ast
 
 %token Equal "=" 
 
+%token NotEqual "<>" Less "<" LessEqual "<=" Greater ">" GreaterEqual ">="
+
+%token And Or
+
 %token Let Rec In
+
+%token If Then Else
 
 %token Fun Arrow "->"
 
@@ -29,7 +40,7 @@ let program :=
 
 let expr :=
   | ~ = open_expr; <>
-  | ~ = additive; <>
+  | ~ = logical_or; <>
 
 let open_expr :=
   | Let; is_rec = boption(Rec); name = Ident; args = Ident*; "=";
@@ -44,22 +55,44 @@ let open_expr :=
       Let (name, value, body)
     }
   | Fun; param = Ident; "->"; body = located_expr(expr); <Lambda>
+  | If; cond = located_expr(expr); Then; then_ = located_expr(expr); Else; else_ = located_expr(expr); <If>
+
+let logical_or :=
+  | l = located_expr(logical_or); Or; r = located_expr(logical_and);
+    { If (located_bool true $loc, l, r) }
+  | ~ = logical_and; <>
+let logical_and :=
+  | l = located_expr(logical_and); And; r = located_expr(comparison);
+    { If (located_bool false $loc, l, r) }
+  | ~ = comparison; <>
+
+%inline comp_op:
+  | "=" {Eq}
+  | "<>" {Neq}
+  | "<" {Lt}
+  | "<=" {Le}
+  | ">" {Gt}
+  | ">=" {Ge}
+
+let comparison :=
+  | l = located_expr(additive); op = comp_op; r = located_expr(additive); {Comp (op, l, r)}
+  | ~ = additive; <>
 
 %inline binop_add:
-  | "+"; { fun l r -> Add (l, r) }
-  | "-"; { fun l r -> Sub (l, r) }
+  | "+"; { Add }
+  | "-"; { Sub }
 %inline binop_mul:
-  | "*"; { fun l r -> Mul (l, r) }
-  | "/"; { fun l r -> Div (l, r) }
+  | "*"; { Mul }
+  | "/"; { Div }
 
 let additive :=
   | l = located_expr(additive); op = binop_add; r = located_expr(multiplicative);
-    { op l r }
+    { Arith (op, l, r) }
   | ~ = multiplicative; <>
 
 let multiplicative :=
   | l = located_expr(multiplicative); op = binop_mul; r = located_expr(app_expr);
-    { op l r }
+    { Arith (op, l, r) }
   | ~ = app_expr; <>
 
 let app_expr :=
@@ -69,4 +102,5 @@ let app_expr :=
 let atom_expr :=
   | name = Ident; <Var>
   | num = Int; <Int>
+  | bool = Bool; <Bool>
   | "("; e = expr; ")"; <>

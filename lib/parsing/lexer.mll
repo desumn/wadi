@@ -22,10 +22,22 @@ rule token = parse
   | "*" {Star}
   | "/" {Slash}
   | "->" {Arrow}
+  | "<>" {NotEqual}
+  | "<" {Less}
+  | "<=" {LessEqual}
+  | ">" {Greater}
+  | ">=" {GreaterEqual}
+  | "and" {And}
+  | "or" {Or}
   | "let" {Let}
   | "rec" {Rec}
   | "in" {In}
   | "fun" {Fun}
+  | "true" {Bool true}
+  | "false" {Bool false}
+  | "if" {If}
+  | "then" {Then}
+  | "else" {Else}
   | number as num {Int (int_of_string num)}
   | ident as ident {Ident ident}
   | eof {Eof}
