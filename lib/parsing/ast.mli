@@ -1,8 +1,5 @@
+type expr = { desc : expr_desc; loc : Location.t }
 
-type expr = {
-  desc : expr_desc;
-  loc : Location.t;
-}
 and expr_desc =
   | Var of string
   | Int of int

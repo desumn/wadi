@@ -1,7 +1,7 @@
 module Location = Location
 module Ast = Ast
 
-exception Parse_error of string * (Location.t)
+exception Parse_error of string * Location.t
 
 module I = Parser.MenhirInterpreter
 
