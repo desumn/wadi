@@ -7,6 +7,8 @@ and expr_desc =
   | Sub of expr * expr
   | Mul of expr * expr
   | Div of expr * expr
-  | Let of string * expr * expr
+  | Let of string * expr * expr * bool
+  | App of expr * expr
+  | Lambda of string * expr
 
 val pp_expr : expr Fmt.t

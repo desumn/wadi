@@ -21,8 +21,11 @@ rule token = parse
   | "-" {Minus}
   | "*" {Star}
   | "/" {Slash}
+  | "->" {Arrow}
   | "let" {Let}
+  | "rec" {Rec}
   | "in" {In}
+  | "fun" {Fun}
   | number as num {Int (int_of_string num)}
   | ident as ident {Ident ident}
   | eof {Eof}
