@@ -12,6 +12,8 @@ bug-reports: "https://github.com/desumn/wadi/issues"
 depends: [
   "dune" {>= "3.22"}
   "ocaml"
+  "cmdliner"
+  "bos"
   "fmt"
   "menhir"
   "menhirLib"

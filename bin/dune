@@ -1,4 +1,4 @@
 (executable
  (public_name wadi)
  (name main)
- (libraries wadi))
+ (libraries wadi cmdliner fpath fmt bos))
