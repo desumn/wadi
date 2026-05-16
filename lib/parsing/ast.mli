@@ -1,12 +1,6 @@
 type expr = { desc : expr_desc; loc : Location.t }
-
-
-and binary_arith_op =
-  | Add | Sub | Mul | Div
-
-and comp_op =
-  | Eq | Neq | Lt | Le | Gt | Ge
-
+and binary_arith_op = Add | Sub | Mul | Div
+and comp_op = Eq | Neq | Lt | Le | Gt | Ge
 
 and expr_desc =
   | Var of string

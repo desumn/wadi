@@ -46,4 +46,25 @@ let eval_cases =
     eval_case "lexical capture"
       (parse "let x = 1 in let f = fun y -> x + y in let x = 99 in f 0")
       (Ok (Int 1));
+    eval_case "bool literal" (parse "true") (Ok (Bool true));
+    eval_case "if true" (parse "if true then 1 else 2") (Ok (Int 1));
+    eval_case "if false" (parse "if false then 1 else 2") (Ok (Int 2));
+    eval_case "comparison" (parse "1 < 2") (Ok (Bool true));
+    eval_case "or true" (parse "true orelse false") (Ok (Bool true));
+    (* va échouer avec le bug actuel *)
+    eval_case "and short circuit"
+      (parse "false andalso (1 / 0)")
+      (Ok (Bool false));
+    (* test short-circuit *)
+    eval_case "if recursion - factorial"
+      (parse
+         "let rec fact = fun n -> if n = 0 then 1 else n * fact (n - 1) in \
+          fact 5")
+      (Ok (Int 120));
+    eval_case "not" (parse "not true") (Ok (Bool false));
+    eval_case "if recursion - fib"
+      (parse
+         "let rec fib = fun n -> if n < 2 then n else fib (n - 1) + fib (n - \
+          2) in fib 10")
+      (Ok (Int 55));
   ]

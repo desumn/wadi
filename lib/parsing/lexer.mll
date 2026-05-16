@@ -27,8 +27,8 @@ rule token = parse
   | "<=" {LessEqual}
   | ">" {Greater}
   | ">=" {GreaterEqual}
-  | "and" {And}
-  | "or" {Or}
+  | "andalso" {And}
+  | "orelse" {Or}
   | "let" {Let}
   | "rec" {Rec}
   | "in" {In}

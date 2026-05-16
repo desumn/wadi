@@ -1,12 +1,6 @@
 type expr = { desc : expr_desc; loc : Location.t }
-
-
-and binary_arith_op =
-  | Add | Sub | Mul | Div
-
-and comp_op =
-  | Eq | Neq | Lt | Le | Gt | Ge
-
+and binary_arith_op = Add | Sub | Mul | Div
+and comp_op = Eq | Neq | Lt | Le | Gt | Ge
 
 and expr_desc =
   | Var of string
@@ -35,7 +29,6 @@ let pp_comp_op ppf op =
   | Le -> Fmt.pf ppf "<="
   | Gt -> Fmt.pf ppf ">"
   | Ge -> Fmt.pf ppf ">="
-
 
 let lam_level = 1
 let add_level = 2
@@ -78,10 +71,12 @@ let rec pp_expr_at level ppf expr =
         (pp_expr_at (div_level + 1))
         r
   | Comp (comp_op, l, r) ->
-      Fmt.pf ppf "@[<2>%a %a@ %a@]" (pp_expr_at (level + 1)) l pp_comp_op comp_op (pp_expr_at level) r
+      Fmt.pf ppf "@[<2>%a %a@ %a@]"
+        (pp_expr_at (level + 1))
+        l pp_comp_op comp_op (pp_expr_at level) r
   | If (cond, then_, else_) ->
-      Fmt.pf ppf "@[<2>if %a then@ %a else@ %a@]" (pp_expr_at 0) cond (pp_expr_at 0) then_
-        (pp_expr_at 0) else_
+      Fmt.pf ppf "@[<2>if %a then@ %a else@ %a@]" (pp_expr_at 0) cond
+        (pp_expr_at 0) then_ (pp_expr_at 0) else_
   | Let (name, value, body) ->
       Fmt.pf ppf "@[<2>let %s = %a@ in@ %a@]" name (pp_expr_at 0) value
         (pp_expr_at 0) body
