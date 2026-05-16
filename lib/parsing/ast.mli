@@ -7,7 +7,8 @@ and expr_desc =
   | Sub of expr * expr
   | Mul of expr * expr
   | Div of expr * expr
-  | Let of string * expr * expr * bool
+  | LetRec of string * expr * expr 
+  | Let of string * expr * expr 
   | App of expr * expr
   | Lambda of string * expr
 

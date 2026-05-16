@@ -38,7 +38,10 @@ let open_expr :=
       let value = List.fold_right args ~init:value
         ~f:(fun arg value -> {value with desc = Lambda(arg, value)})
       in
-      Let (name, value, body, is_rec)
+      if is_rec then 
+      LetRec (name, value, body)
+      else
+      Let (name, value, body)
     }
   | Fun; param = Ident; "->"; body = located_expr(expr); <Lambda>
 

@@ -26,6 +26,7 @@ type eval_error =
   | Unbound_variable of string
   | Invalid_application
   | Type_mismatch of (expected:string * value)
+  | Invalid_rec
 
 let pp_error ppf eval_error =
   match eval_error with
@@ -33,6 +34,7 @@ let pp_error ppf eval_error =
   | Unbound_variable var -> Fmt.pf ppf "unbound variable: %s" var
   | Invalid_application -> Fmt.string ppf "invalid application"
   | Type_mismatch ~expected, value -> Fmt.pf ppf "type mismatch: expected %s, got %a" expected pp_value value
+  | Invalid_rec -> Fmt.string ppf "invalid rec"
 
 let equal_error err1 err2 =
   match (err1, err2) with
@@ -41,6 +43,7 @@ let equal_error err1 err2 =
   | Invalid_application, Invalid_application -> true
   | Type_mismatch (~expected:expected1,_), Type_mismatch (~expected:expected2, _) ->
       String.equal expected1 expected2
+  | Invalid_rec, Invalid_rec -> true
   | _ -> false
 
 let as_int value = match value with Int i -> Ok i | _ -> Error (Type_mismatch (~expected:"int", value))
@@ -71,14 +74,18 @@ let rec eval_expr env (expr : Parsing.Ast.expr) =
       let* l = as_int' @@ eval_expr env l in
       let* r = as_int' @@ eval_expr env r in
       if r = 0 then Error Divide_by_zero else Ok (Int (l / r))
-  | Let (name, value, body, is_rec) ->
+  | Let (name, value, body) ->
+      let* value = eval_expr env value in
+      let new_env =  Env.add name value env
+      in
+      eval_expr new_env body
+  | LetRec (name, value, body) ->
       let* value = eval_expr env value in
       let new_env =
         match value with
-        | Closure closure when is_rec ->
+        | Closure closure ->
             Env.add name (Closure { closure with name = Some name }) env
-        | _ -> Env.add name value env
-      in
+        | _ -> Env.add name value env in
       eval_expr new_env body
   | App (on, value) ->
       let* on = eval_expr env on in

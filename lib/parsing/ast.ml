@@ -7,7 +7,8 @@ and expr_desc =
   | Sub of expr * expr
   | Mul of expr * expr
   | Div of expr * expr
-  | Let of string * expr * expr * bool
+  | LetRec of string * expr * expr
+  | Let of string * expr * expr
   | App of expr * expr
   | Lambda of string * expr
 
@@ -50,9 +51,11 @@ let rec pp_expr_at level ppf expr =
       Fmt.pf ppf "@[<2>%a /@ %a@]" (pp_expr_at div_level) l
         (pp_expr_at (div_level + 1))
         r
-  | Let (name, value, body, is_rec) ->
-      let rec_s = if is_rec then "rec" else "" in
-      Fmt.pf ppf "@[<2>let %s %s = %a@ in@ %a@]" rec_s name (pp_expr_at 0) value
+  | Let (name, value, body) ->
+      Fmt.pf ppf "@[<2>let %s = %a@ in@ %a@]" name (pp_expr_at 0) value
+        (pp_expr_at 0) body
+  | LetRec (name, value, body) ->
+      Fmt.pf ppf "@[<2>let %s = %a@ in@ %a@]" name (pp_expr_at 0) value
         (pp_expr_at 0) body
   | App (func, value) ->
       paren_if (level > app_level) ppf @@ fun () ->
