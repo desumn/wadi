@@ -1,6 +1,10 @@
 module Env = Map.Make (String)
 
-type eval_error = Divide_by_zero | Unbound_variable of string | Invalid_application | Int_type_error
+type eval_error =
+  | Divide_by_zero
+  | Unbound_variable of string
+  | Invalid_application
+  | Int_type_error
 
 let pp_error ppf eval_error =
   match eval_error with
@@ -19,24 +23,25 @@ let equal_error err1 err2 =
 
 type value =
   | Int of int
-  | Closure of {param: string; body : Parsing.Ast.expr; env : value Env.t; name : string option}
+  | Closure of {
+      param : string;
+      body : Parsing.Ast.expr;
+      env : value Env.t;
+      name : string option;
+    }
 
 let pp_value ppf value =
   match value with
   | Int i -> Fmt.int ppf i
-  | Closure {param; _} -> Fmt.pf ppf "closure: %s -> ..." param
+  | Closure { param; _ } -> Fmt.pf ppf "closure: %s -> ..." param
 
 let rec equal_value value1 value2 =
-  match value1, value2 with
+  match (value1, value2) with
   | Int i1, Int i2 -> Int.equal i1 i2
-  | Closure c1, Closure c2 -> Option.equal (String.equal) c1.name c2.name
+  | Closure c1, Closure c2 -> Option.equal String.equal c1.name c2.name
   | _ -> false
 
-let as_int value =
-  match value with
-  | Int i -> Ok i
-  | _ -> Error Int_type_error
-
+let as_int value = match value with Int i -> Ok i | _ -> Error Int_type_error
 let as_int' res = Result.bind res as_int
 
 let rec eval_expr env (expr : Parsing.Ast.expr) =
@@ -51,36 +56,40 @@ let rec eval_expr env (expr : Parsing.Ast.expr) =
   | Add (l, r) ->
       let* l = as_int' @@ eval_expr env l in
       let+ r = as_int' @@ eval_expr env r in
-      Int(l + r)
+      Int (l + r)
   | Sub (l, r) ->
       let* l = as_int' @@ eval_expr env l in
       let+ r = as_int' @@ eval_expr env r in
-      Int(l - r)
+      Int (l - r)
   | Mul (l, r) ->
       let* l = as_int' @@ eval_expr env l in
       let+ r = as_int' @@ eval_expr env r in
-      Int(l * r)
+      Int (l * r)
   | Div (l, r) ->
       let* l = as_int' @@ eval_expr env l in
       let* r = as_int' @@ eval_expr env r in
-      if r = 0 then Error Divide_by_zero else Ok (Int(l / r))
+      if r = 0 then Error Divide_by_zero else Ok (Int (l / r))
   | Let (name, value, body, is_rec) ->
       let* value = eval_expr env value in
-      let new_env = match value with
-      | Closure closure when is_rec -> Env.add name (Closure {closure with name=Some name}) env
-      | _ -> Env.add name value env
+      let new_env =
+        match value with
+        | Closure closure when is_rec ->
+            Env.add name (Closure { closure with name = Some name }) env
+        | _ -> Env.add name value env
       in
       eval_expr new_env body
   | App (on, value) ->
       let* on = eval_expr env on in
       let* value = eval_expr env value in
       begin match on with
-      | Closure {param; body; env=capt_env; name} as closure ->
-          let capt_env = begin match name with
-          | Some name -> Env.add name closure capt_env
-          | None -> capt_env
-          end in
+      | Closure { param; body; env = capt_env; name } as closure ->
+          let capt_env =
+            begin match name with
+            | Some name -> Env.add name closure capt_env
+            | None -> capt_env
+            end
+          in
           eval_expr (Env.add param value capt_env) body
       | _ -> Error Invalid_application
       end
-  | Lambda (param, body) -> Ok (Closure {param; body; env; name=None})
+  | Lambda (param, body) -> Ok (Closure { param; body; env; name = None })

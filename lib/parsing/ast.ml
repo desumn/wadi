@@ -56,7 +56,9 @@ let rec pp_expr_at level ppf expr =
         (pp_expr_at 0) body
   | App (func, value) ->
       paren_if (level > app_level) ppf @@ fun () ->
-      Fmt.pf ppf "@[<2>%a@ %a@]" (pp_expr_at (app_level + 1)) func (pp_expr_at app_level) value
+      Fmt.pf ppf "@[<2>%a@ %a@]"
+        (pp_expr_at (app_level + 1))
+        func (pp_expr_at app_level) value
   | Lambda (arg, body) ->
       paren_if (level > lam_level) ppf @@ fun () ->
       Fmt.pf ppf "@[%s %a@]" arg (pp_expr_at lam_level) body
