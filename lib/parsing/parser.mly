@@ -21,9 +21,6 @@ open Ast
 
 %%
 
-let option_bool(X) ==
-  | x = X?; {match x with None -> false | Some _ -> true}
-
 let located_expr(X) ==
   | x = X;  { { desc = x; loc = Location.make $loc } }
 
@@ -35,7 +32,7 @@ let expr :=
   | ~ = additive; <>
 
 let open_expr :=
-  | Let; is_rec = option_bool(Rec); name = Ident; args = Ident*; "=";
+  | Let; is_rec = boption(Rec); name = Ident; args = Ident*; "=";
     value = located_expr(expr); In; body = located_expr(expr);
     {
       let value = List.fold_right args ~init:value
