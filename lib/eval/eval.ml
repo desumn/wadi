@@ -1,25 +1,5 @@
 module Env = Map.Make (String)
 
-type eval_error =
-  | Divide_by_zero
-  | Unbound_variable of string
-  | Invalid_application
-  | Int_type_error
-
-let pp_error ppf eval_error =
-  match eval_error with
-  | Divide_by_zero -> Fmt.string ppf "divide by zero"
-  | Unbound_variable var -> Fmt.pf ppf "unbound variable: %s" var
-  | Invalid_application -> Fmt.string ppf "invalid application"
-  | Int_type_error -> Fmt.string ppf "int type error"
-
-let equal_error err1 err2 =
-  match (err1, err2) with
-  | Divide_by_zero, Divide_by_zero -> true
-  | Unbound_variable var1, Unbound_variable var2 -> String.equal var1 var2
-  | Invalid_application, Invalid_application -> true
-  | Int_type_error, Int_type_error -> true
-  | _ -> false
 
 type value =
   | Int of int
@@ -41,7 +21,29 @@ let rec equal_value value1 value2 =
   | Closure c1, Closure c2 -> Option.equal String.equal c1.name c2.name
   | _ -> false
 
-let as_int value = match value with Int i -> Ok i | _ -> Error Int_type_error
+type eval_error =
+  | Divide_by_zero
+  | Unbound_variable of string
+  | Invalid_application
+  | Type_mismatch of (expected:string * value)
+
+let pp_error ppf eval_error =
+  match eval_error with
+  | Divide_by_zero -> Fmt.string ppf "divide by zero"
+  | Unbound_variable var -> Fmt.pf ppf "unbound variable: %s" var
+  | Invalid_application -> Fmt.string ppf "invalid application"
+  | Type_mismatch ~expected, value -> Fmt.pf ppf "type mismatch: expected %s, got %a" expected pp_value value
+
+let equal_error err1 err2 =
+  match (err1, err2) with
+  | Divide_by_zero, Divide_by_zero -> true
+  | Unbound_variable var1, Unbound_variable var2 -> String.equal var1 var2
+  | Invalid_application, Invalid_application -> true
+  | Type_mismatch (~expected:expected1,_), Type_mismatch (~expected:expected2, _) ->
+      String.equal expected1 expected2
+  | _ -> false
+
+let as_int value = match value with Int i -> Ok i | _ -> Error (Type_mismatch (~expected:"int", value))
 let as_int' res = Result.bind res as_int
 
 let rec eval_expr env (expr : Parsing.Ast.expr) =

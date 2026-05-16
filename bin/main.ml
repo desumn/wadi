@@ -31,11 +31,8 @@ let parse_and_execute file =
       | Error (Unbound_variable var) ->
           Fmt.epr "error: variable %s is unbound" var;
           Cmd.Exit.some_error
-      | Error Int_type_error ->
-          Fmt.epr "error: int type error";
-          Cmd.Exit.some_error
-      | Error Invalid_application ->
-          Fmt.epr "error: invalid application";
+      | Error err ->
+          Fmt.epr "error: %a" Eval.pp_error err;
           Cmd.Exit.some_error
       end
   | Error (`Msg error_message) ->
