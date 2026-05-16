@@ -35,9 +35,6 @@ let expr :=
   | ~ = additive; <>
 
 let open_expr :=
-  | Let; is_rec = option_bool(Rec); name = Ident; "=";
-    value = located_expr(expr); In; body = located_expr(expr);
-    {Let (name, value, body, is_rec)}
   | Let; is_rec = option_bool(Rec); name = Ident; args = Ident*; "=";
     value = located_expr(expr); In; body = located_expr(expr);
     {
