@@ -59,11 +59,11 @@ let open_expr :=
 
 let logical_or :=
   | l = located_expr(logical_or); Or; r = located_expr(logical_and);
-    { If (located_bool true $loc, l, r) }
+    { If (l, located_bool true $loc, r) }
   | ~ = logical_and; <>
 let logical_and :=
   | l = located_expr(logical_and); And; r = located_expr(comparison);
-    { If (located_bool false $loc, l, r) }
+    { If (l, r, located_bool false $loc) }
   | ~ = comparison; <>
 
 %inline comp_op:
