@@ -27,6 +27,7 @@ let parse_lexbuf (lexbuf : Lexing.lexbuf) =
   let checkpoint = Parser.Incremental.program lexbuf.lex_curr_p in
   I.loop_handle succeed (fail lexbuf) (supplier lexbuf) checkpoint
 
-let parse_string string =
+let parse_string ?(name = "string") string =
   let lexbuf = Lexing.from_string string in
+  Lexing.set_filename lexbuf name;
   parse_lexbuf lexbuf

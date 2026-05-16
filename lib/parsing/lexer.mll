@@ -11,7 +11,7 @@ let ident   = letter (letter | digit | '_')*
 let number = digit (digit)*
 
 rule token = parse
-  | [' ' '\t']+ { token lexbuf }
+  | [' ' '\t' '\r']+ { token lexbuf }
   | '\n' { Lexing.new_line lexbuf; token lexbuf }
   | "(*" { comment 1 lexbuf }
   | "(" {ParenOpen}

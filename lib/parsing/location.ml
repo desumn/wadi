@@ -8,5 +8,5 @@ let from_lexbuf (lexbuf : Lexing.lexbuf) = make (lexbuf.lex_start_p, lexbuf.lex_
 let pp ppf loc =
   Fmt.pf ppf "%s: %d:%d-%d:%d"
     loc.start.pos_fname 
-    loc.start.pos_lnum loc.start.pos_cnum
-    loc.end_.pos_lnum loc.end_.pos_cnum
+    loc.start.pos_lnum (loc.start.pos_cnum - loc.start.pos_bol)
+    loc.end_.pos_lnum (loc.end_.pos_cnum - loc.end_.pos_bol)
