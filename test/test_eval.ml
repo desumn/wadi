@@ -26,4 +26,6 @@ let eval_cases =
     eval_case "divide by zero"
       (parse "let x = 10 in let a = 32 in x * a / 0")
       (Error Divide_by_zero);
+    eval_case "with_comments"
+      (parse "(* add two numbers *) 30 + 40") (Ok 70);
   ]
