@@ -51,7 +51,6 @@ let eval_cases =
     eval_case "if false" (parse "if false then 1 else 2") (Ok (Int 2));
     eval_case "comparison" (parse "1 < 2") (Ok (Bool true));
     eval_case "or true" (parse "true orelse false") (Ok (Bool true));
-    (* va échouer avec le bug actuel *)
     eval_case "and short circuit"
       (parse "false andalso (1 / 0)")
       (Ok (Bool false));
