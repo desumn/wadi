@@ -110,4 +110,15 @@ let eval_cases =
     eval_case "let destructure mismatch"
       (parse "let (a, b) = 1 in a + b")
       (Error No_pattern_found);
+    eval_case "swap function"
+      (parse "let swap p = match p with | (a, b) -> (b, a) in swap (1, 2)")
+      (Ok (Tuple [ Int 2; Int 1 ]));
+    eval_case "match in recursive function"
+      (parse
+         "let rec sum_pair p = match p with | (0, 0) -> 0 | (a, b) -> a + b in \
+          sum_pair (3, 4)")
+      (Ok (Int 7));
+    eval_case "pattern shadowing"
+      (parse "let x = 1 in match 5 with | x -> x + 1")
+      (Ok (Int 6));
   ]
