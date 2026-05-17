@@ -110,7 +110,7 @@ let eval_cases =
       (parse "let (a, b) = 1 in a + b")
       (Error No_pattern_found);
     eval_case "swap function"
-      (parse "let swap p = match p with | (a, b) -> (b, a) in swap (1, 2) end")
+      (parse "let swap p = match p with | (a, b) -> (b, a) end in swap (1, 2)")
       (Ok (Tuple [ Int 2; Int 1 ]));
     eval_case "match in recursive function"
       (parse
