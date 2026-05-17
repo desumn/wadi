@@ -28,6 +28,8 @@ rule token = parse
   | "/" {Slash}
   | "|" {Bar}
   | "_" {Underscore}
+  | "|>" {Pipe}
+  | "<|" {RevPipe}
   | "->" {Arrow}
   | "<>" {NotEqual}
   | "<" {Less}

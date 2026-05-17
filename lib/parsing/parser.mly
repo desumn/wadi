@@ -34,6 +34,8 @@ let located_bool b loc = { expr_desc = Bool b; loc = Location.make loc }
 
 %token Fun Arrow "->"
 
+%token Pipe "|>" RevPipe "<|"
+
 %token Eof
 
 %start <expr> program
@@ -51,7 +53,7 @@ let program :=
 
 let expr :=
   | ~ = open_expr; <>
-  | ~ = logical_or; <>
+  | ~ = pipe_expr; <>
 
 let open_expr :=
   | Let; pat = located_pat(pat); "=";
@@ -97,6 +99,16 @@ let atomic_pat :=
   | "("; ")"; { Unit }
   | "("; ~ = pat; ")"; <>
 
+let pipe_expr :=
+  | l = located_expr(pipe_expr); "|>"; r = located_expr(rpipe_expr);
+    { App (r, l) }
+  | ~ = rpipe_expr; <>
+let rpipe_expr :=
+  | l = located_expr(logical_or); "<|"; r = located_expr(rpipe_expr);
+    { App (l, r) }
+  | ~ = logical_or; <>
+
+  
 let logical_or :=
   | l = located_expr(logical_or); Or; r = located_expr(logical_and);
     { If (l, located_bool true $loc, r) }
