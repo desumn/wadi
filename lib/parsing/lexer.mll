@@ -22,6 +22,8 @@ rule token = parse
   | "-" {Minus}
   | "*" {Star}
   | "/" {Slash}
+  | "|" {Bar}
+  | "_" {Underscore}
   | "->" {Arrow}
   | "<>" {NotEqual}
   | "<" {Less}
@@ -39,6 +41,8 @@ rule token = parse
   | "if" {If}
   | "then" {Then}
   | "else" {Else}
+  | "match" {Match}
+  | "with" {With}
   | number as num {Int (int_of_string num)}
   | ident as ident {Ident ident}
   | eof {Eof}

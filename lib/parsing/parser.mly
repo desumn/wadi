@@ -2,7 +2,7 @@
 open StdLabels
 open Ast
 
-let located_bool b loc = { desc = Bool b; loc = Location.make loc }
+let located_bool b loc = { expr_desc = Bool b; loc = Location.make loc }
 
 
 %}
@@ -20,9 +20,13 @@ let located_bool b loc = { desc = Bool b; loc = Location.make loc }
 
 %token NotEqual "<>" Less "<" LessEqual "<=" Greater ">" GreaterEqual ">="
 
+%token Bar "|" Underscore "_"
+
 %token And Or
 
 %token Let Rec In
+
+%token Match With
 
 %token If Then Else
 
@@ -35,7 +39,10 @@ let located_bool b loc = { desc = Bool b; loc = Location.make loc }
 %%
 
 let located_expr(X) ==
-  | x = X;  { { desc = x; loc = Location.make $loc } }
+  | x = X;  { { expr_desc = x; loc = Location.make $loc } }
+
+let located_pat(X) ==
+  | x = X;  { { pat_desc = x; loc = Location.make $loc } }
 
 let program :=
   | ~ = located_expr(expr); Eof; <>
@@ -45,12 +52,16 @@ let expr :=
   | ~ = logical_or; <>
 
 let open_expr :=
+  | Let; pat = located_pat(pat); "=";
+    value = located_expr(expr); In; body = located_expr(expr);
+    {Let (pat, value, body)}
   | Let; is_rec = boption(Rec); name = Ident; args = Ident*; "=";
     value = located_expr(expr); In; body = located_expr(expr);
     {
       let value = List.fold_right args ~init:value
-        ~f:(fun arg value -> {value with desc = Lambda(arg, value)})
+        ~f:(fun arg value -> {value with expr_desc = Lambda(arg, value)})
       in
+      let name = { pat_desc = Var name; loc = Location.make $loc } in
       if is_rec then 
       LetRec (name, value, body)
       else
@@ -58,6 +69,25 @@ let open_expr :=
     }
   | Fun; param = Ident; "->"; body = located_expr(expr); <Lambda>
   | If; cond = located_expr(expr); Then; then_ = located_expr(expr); Else; else_ = located_expr(expr); <If>
+  | Match; e = located_expr(expr); With; bs = match_branches;
+    { Match (e, bs) }
+
+let match_branches :=
+  | "|"?; b = match_branch; bs = list("|"; b = match_branch; <>);
+    { b :: bs }
+let match_branch :=
+  | p = located_pat(pat); "->"; e = located_expr(expr); { (p, e) }
+let pat :=
+  | ~ = atomic_pat; <>
+  | "("; p = located_pat(pat); ","; ps = separated_nonempty_list(",", located_pat(pat)); ")";
+    { Tuple (p :: ps) }
+let atomic_pat :=
+  | "_"; { Wildcard }
+  | name = Ident; <Var>
+  | n = Int; <Int>
+  | b = Bool; <Bool>
+  | "("; ")"; { Unit }
+  | "("; ~ = pat; ")"; <>
 
 let logical_or :=
   | l = located_expr(logical_or); Or; r = located_expr(logical_and);

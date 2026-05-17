@@ -1,40 +1,14 @@
-module Env = Map.Make (String)
 open StdLabels
-
-type value =
-  | Int of int
-  | Bool of bool
-  | Unit
-  | Tuple of value list
-  | Closure of {
-      param : string;
-      body : Parsing.Ast.expr;
-      env : value Env.t;
-      name : string option;
-    }
-
-let rec pp_value ppf value =
-  match value with
-  | Int i -> Fmt.int ppf i
-  | Bool b -> Fmt.bool ppf b
-  | Unit -> Fmt.pf ppf "()"
-  | Tuple exprs -> Fmt.pf ppf "(%a)" (Fmt.list pp_value ~sep:Fmt.comma) exprs
-  | Closure { param; _ } -> Fmt.pf ppf "closure: %s -> ..." param
-
-let rec equal_value value1 value2 =
-  match (value1, value2) with
-  | Int i1, Int i2 -> Int.equal i1 i2
-  | Bool b1, Bool b2 -> Bool.equal b1 b2
-  | Unit, Unit -> true
-  | Tuple exprs1, Tuple exprs2 -> List.equal ~eq:equal_value exprs1 exprs2
-  | Closure c1, Closure c2 -> Option.equal String.equal c1.name c2.name
-  | _ -> false
+module Value = Value
+module Pattern = Pattern
+open Value
 
 type eval_error =
   | Divide_by_zero
   | Unbound_variable of string
   | Invalid_application
   | Type_mismatch of (expected:string * value)
+  | No_pattern_found
   | Invalid_rec
 
 let pp_error ppf eval_error =
@@ -44,6 +18,7 @@ let pp_error ppf eval_error =
   | Invalid_application -> Fmt.string ppf "invalid application"
   | Type_mismatch (~expected, value) ->
       Fmt.pf ppf "type mismatch: expected %s, got %a" expected pp_value value
+  | No_pattern_found -> Fmt.string ppf "no pattern found"
   | Invalid_rec -> Fmt.string ppf "invalid rec"
 
 let equal_error err1 err2 =
@@ -54,6 +29,7 @@ let equal_error err1 err2 =
   | ( Type_mismatch (~expected:expected1, _),
       Type_mismatch (~expected:expected2, _) ) ->
       String.equal expected1 expected2
+  | No_pattern_found, No_pattern_found -> true
   | Invalid_rec, Invalid_rec -> true
   | _ -> false
 
@@ -95,15 +71,21 @@ let comp_fun : Parsing.Ast.comp_op -> 'a -> 'a -> bool = function
 
 let rec eval_expr' env (expr : Parsing.Ast.expr) =
   let open Result.Syntax in
-  match expr.desc with
+  match expr.expr_desc with
   | Int i -> Ok (Int i)
   | Bool i -> Ok (Bool i)
   | Unit -> Ok Unit
-  | Tuple (exprs) ->
-    let+ exprs =
-      List.fold_right ~f:(fun res acc -> let* acc = acc in let+ res = res in res::acc)
-      ~init:(Ok []) @@ List.map ~f:(eval_expr' env) exprs in
-    Tuple exprs
+  | Tuple exprs ->
+      let+ exprs =
+        List.fold_right
+          ~f:(fun res acc ->
+            let* acc = acc in
+            let+ res = res in
+            res :: acc)
+          ~init:(Ok [])
+        @@ List.map ~f:(eval_expr' env) exprs
+      in
+      Tuple exprs
   | Var name ->
       begin match Env.find_opt name env with
       | Some v -> Ok v
@@ -132,12 +114,18 @@ let rec eval_expr' env (expr : Parsing.Ast.expr) =
   | If (cond, then_, else_) ->
       let* cond = as_bool' @@ eval_expr' env cond in
       if cond then eval_expr' env then_ else eval_expr' env else_
-  | Let (name, value, body) ->
+  | Let (pat, value, body) ->
       let* value = eval_expr' env value in
-      let new_env = Env.add name value env in
-      eval_expr' new_env body
+      let new_env = Pattern.match_pattern value pat env in
+      begin match new_env with
+      | Some new_env -> eval_expr' new_env body
+      | None -> Error No_pattern_found
+      end
   | LetRec (name, value, body) ->
       let* value = eval_expr' env value in
+      let name =
+        match name.pat_desc with Var name -> name | _ -> assert false
+      in
       begin match value with
       | Closure closure ->
           let new_env =
@@ -161,6 +149,17 @@ let rec eval_expr' env (expr : Parsing.Ast.expr) =
       | _ -> Error Invalid_application
       end
   | Lambda (param, body) -> Ok (Closure { param; body; env; name = None })
+  | Match (expr, pats) ->
+      let* expr = eval_expr' env expr in
+      begin match
+        List.find_map pats ~f:(fun (pat, body) ->
+            Option.map
+              (fun env -> (env, body))
+              (Pattern.match_pattern expr pat env))
+      with
+      | Some (env, body) -> eval_expr' env body
+      | None -> Error No_pattern_found
+      end
 
 let builtins =
   Env.of_list

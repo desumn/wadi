@@ -1,4 +1,4 @@
-type expr = { desc : expr_desc; loc : Location.t }
+type expr = { expr_desc : expr_desc; loc : Location.t }
 and binary_arith_op = Add | Sub | Mul | Div
 and comp_op = Eq | Neq | Lt | Le | Gt | Ge
 
@@ -11,10 +11,30 @@ and expr_desc =
   | Arith of binary_arith_op * expr * expr
   | Comp of comp_op * expr * expr
   | If of expr * expr * expr
-  | LetRec of string * expr * expr
-  | Let of string * expr * expr
+  | LetRec of pat * expr * expr
+  | Let of pat * expr * expr
   | App of expr * expr
   | Lambda of string * expr
+  | Match of expr * (pat * expr) list
+
+and pat = { pat_desc : pat_desc; loc : Location.t }
+
+and pat_desc =
+  | Wildcard
+  | Unit
+  | Var of string
+  | Int of int
+  | Bool of bool
+  | Tuple of pat list
+
+let rec pp_pat ppf pat =
+  match pat.pat_desc with
+  | Wildcard -> Fmt.string ppf "_"
+  | Unit -> Fmt.string ppf "()"
+  | Var name -> Fmt.string ppf name
+  | Int i -> Fmt.int ppf i
+  | Bool b -> Fmt.bool ppf b
+  | Tuple pats -> Fmt.pf ppf "(%a)" (Fmt.list ~sep:Fmt.comma pp_pat) pats
 
 let pp_binary_arith_op ppf op =
   match op with
@@ -48,12 +68,13 @@ let paren_if cond ppf do_ =
   else do_ ()
 
 let rec pp_expr_at level ppf expr =
-  match expr.desc with
+  match expr.expr_desc with
   | Var name -> Fmt.string ppf name
   | Int int -> Fmt.int ppf int
   | Bool bool -> Fmt.bool ppf bool
   | Unit -> Fmt.string ppf "()"
-  | Tuple exprs -> Fmt.pf ppf "(%a)" (Fmt.list (pp_expr_at 0) ~sep:(Fmt.comma)) exprs
+  | Tuple exprs ->
+      Fmt.pf ppf "(%a)" (Fmt.list (pp_expr_at 0) ~sep:Fmt.comma) exprs
   | Arith (Add, l, r) ->
       paren_if (level > add_level) ppf @@ fun () ->
       Fmt.pf ppf "@[<2>%a +@ %a@]" (pp_expr_at add_level) l
@@ -82,11 +103,11 @@ let rec pp_expr_at level ppf expr =
       Fmt.pf ppf "@[<2>if %a then@ %a else@ %a@]" (pp_expr_at 0) cond
         (pp_expr_at 0) then_ (pp_expr_at 0) else_
   | Let (name, value, body) ->
-      Fmt.pf ppf "@[<2>let %s = %a@ in@ %a@]" name (pp_expr_at 0) value
+      Fmt.pf ppf "@[<2>let %a = %a@ in@ %a@]" pp_pat name (pp_expr_at 0) value
         (pp_expr_at 0) body
   | LetRec (name, value, body) ->
-      Fmt.pf ppf "@[<2>let rec %s = %a@ in@ %a@]" name (pp_expr_at 0) value
-        (pp_expr_at 0) body
+      Fmt.pf ppf "@[<2>let rec %a = %a@ in@ %a@]" pp_pat name (pp_expr_at 0)
+        value (pp_expr_at 0) body
   | App (func, value) ->
       paren_if (level > app_level) ppf @@ fun () ->
       Fmt.pf ppf "@[<2>%a@ %a@]"
@@ -94,6 +115,14 @@ let rec pp_expr_at level ppf expr =
         func (pp_expr_at app_level) value
   | Lambda (arg, body) ->
       paren_if (level > lam_level) ppf @@ fun () ->
-      Fmt.pf ppf "@[%s %a@]" arg (pp_expr_at lam_level) body
+      Fmt.pf ppf "@[<2>fun %s ->@ %a@]" arg (pp_expr_at lam_level) body
+  | Match (expr, patterns) ->
+      Fmt.pf ppf "@[match %a with@ %a@]" (pp_expr_at 0) expr
+        (Fmt.list
+           ~sep:(fun ppf () -> Fmt.pf ppf "| ")
+           (Fmt.pair
+              ~sep:(fun ppf () -> Fmt.pf ppf " -> ")
+              pp_pat (pp_expr_at 0)))
+        patterns
 
 let pp_expr = pp_expr_at 0

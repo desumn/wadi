@@ -21,9 +21,9 @@ let program_arg =
 let parse_and_execute file =
   match parse_file file with
   | Ok ast ->
-      begin match Eval.eval_expr Eval.Env.empty ast with
+      begin match Eval.eval_expr Eval.Value.Env.empty ast with
       | Ok i ->
-          Fmt.pr "=> %a@." Eval.pp_value i;
+          Fmt.pr "=> %a@." Eval.Value.pp_value i;
           Cmd.Exit.ok
       | Error err ->
           Fmt.epr "error: %a@." Eval.pp_error err;

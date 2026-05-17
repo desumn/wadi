@@ -2,12 +2,12 @@ open StdLabels
 open Alcotest
 open Wadi
 
-let value = testable Eval.pp_value Eval.equal_value
+let value = testable Eval.Value.pp_value Eval.Value.equal_value
 let eval_error = testable Eval.pp_error Eval.equal_error
 
 let eval_test name ast expected =
   check' (result value eval_error) ~msg:name ~expected
-    ~actual:(Eval.eval_expr Eval.Env.empty ast)
+    ~actual:(Eval.eval_expr Eval.Value.Env.empty ast)
 
 let eval_case name ast expected =
   test_case name `Quick @@ fun () -> eval_test name ast expected
