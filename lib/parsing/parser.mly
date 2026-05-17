@@ -54,18 +54,22 @@ let expr :=
 let open_expr :=
   | Let; pat = located_pat(pat); "=";
     value = located_expr(expr); In; body = located_expr(expr);
-    {Let (pat, value, body)}
-  | Let; is_rec = boption(Rec); name = Ident; args = Ident*; "=";
+    { Let (pat, value, body) }
+  | Let; name = Ident; arg1 = Ident; args = Ident*; "=";
+    value = located_expr(expr); In; body = located_expr(expr);
+    {
+      let args = arg1 :: args in
+      let value = List.fold_right args ~init:value
+        ~f:(fun arg value -> {value with expr_desc = Lambda(arg, value)}) in
+      let pat = { pat_desc = Var name; loc = Location.make $loc } in
+      Let (pat, value, body)
+    }
+  | Let; Rec; name = Ident; args = Ident*; "=";
     value = located_expr(expr); In; body = located_expr(expr);
     {
       let value = List.fold_right args ~init:value
-        ~f:(fun arg value -> {value with expr_desc = Lambda(arg, value)})
-      in
-      let name = { pat_desc = Var name; loc = Location.make $loc } in
-      if is_rec then 
+        ~f:(fun arg value -> {value with expr_desc = Lambda(arg, value)}) in
       LetRec (name, value, body)
-      else
-      Let (name, value, body)
     }
   | Fun; param = Ident; "->"; body = located_expr(expr); <Lambda>
   | If; cond = located_expr(expr); Then; then_ = located_expr(expr); Else; else_ = located_expr(expr); <If>

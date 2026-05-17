@@ -11,7 +11,7 @@ and expr_desc =
   | Arith of binary_arith_op * expr * expr
   | Comp of comp_op * expr * expr
   | If of expr * expr * expr
-  | LetRec of pat * expr * expr
+  | LetRec of string * expr * expr
   | Let of pat * expr * expr
   | App of expr * expr
   | Lambda of string * expr

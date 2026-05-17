@@ -123,9 +123,6 @@ let rec eval_expr' env (expr : Parsing.Ast.expr) =
       end
   | LetRec (name, value, body) ->
       let* value = eval_expr' env value in
-      let name =
-        match name.pat_desc with Var name -> name | _ -> assert false
-      in
       begin match value with
       | Closure closure ->
           let new_env =

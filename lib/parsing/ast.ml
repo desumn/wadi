@@ -11,7 +11,7 @@ and expr_desc =
   | Arith of binary_arith_op * expr * expr
   | Comp of comp_op * expr * expr
   | If of expr * expr * expr
-  | LetRec of pat * expr * expr
+  | LetRec of string * expr * expr
   | Let of pat * expr * expr
   | App of expr * expr
   | Lambda of string * expr
@@ -106,8 +106,8 @@ let rec pp_expr_at level ppf expr =
       Fmt.pf ppf "@[<2>let %a = %a@ in@ %a@]" pp_pat name (pp_expr_at 0) value
         (pp_expr_at 0) body
   | LetRec (name, value, body) ->
-      Fmt.pf ppf "@[<2>let rec %a = %a@ in@ %a@]" pp_pat name (pp_expr_at 0)
-        value (pp_expr_at 0) body
+      Fmt.pf ppf "@[<2>let rec %s = %a@ in@ %a@]" name (pp_expr_at 0) value
+        (pp_expr_at 0) body
   | App (func, value) ->
       paren_if (level > app_level) ppf @@ fun () ->
       Fmt.pf ppf "@[<2>%a@ %a@]"
