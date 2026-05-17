@@ -1,8 +1,11 @@
 module Env = Map.Make (String)
+open StdLabels
 
 type value =
   | Int of int
   | Bool of bool
+  | Unit
+  | Tuple of value list
   | Closure of {
       param : string;
       body : Parsing.Ast.expr;
@@ -10,17 +13,21 @@ type value =
       name : string option;
     }
 
-let pp_value ppf value =
+let rec pp_value ppf value =
   match value with
   | Int i -> Fmt.int ppf i
   | Bool b -> Fmt.bool ppf b
+  | Unit -> Fmt.pf ppf "()"
+  | Tuple exprs -> Fmt.pf ppf "(%a)" (Fmt.list pp_value ~sep:Fmt.comma) exprs
   | Closure { param; _ } -> Fmt.pf ppf "closure: %s -> ..." param
 
 let rec equal_value value1 value2 =
   match (value1, value2) with
   | Int i1, Int i2 -> Int.equal i1 i2
-  | Closure c1, Closure c2 -> Option.equal String.equal c1.name c2.name
   | Bool b1, Bool b2 -> Bool.equal b1 b2
+  | Unit, Unit -> true
+  | Tuple exprs1, Tuple exprs2 -> List.equal ~eq:equal_value exprs1 exprs2
+  | Closure c1, Closure c2 -> Option.equal String.equal c1.name c2.name
   | _ -> false
 
 type eval_error =
@@ -64,6 +71,20 @@ let as_bool value =
 
 let as_bool' res = Result.bind res as_bool
 
+let as_unit value =
+  match value with
+  | Unit -> Ok ()
+  | _ -> Error (Type_mismatch (~expected:"unit", value))
+
+let as_unit' res = Result.bind res as_unit
+
+let as_tuple value =
+  match value with
+  | Tuple exprs -> Ok exprs
+  | _ -> Error (Type_mismatch (~expected:"tuple", value))
+
+let as_tuple' res = Result.bind res as_tuple
+
 let comp_fun : Parsing.Ast.comp_op -> 'a -> 'a -> bool = function
   | Eq -> ( = )
   | Neq -> ( <> )
@@ -77,6 +98,12 @@ let rec eval_expr' env (expr : Parsing.Ast.expr) =
   match expr.desc with
   | Int i -> Ok (Int i)
   | Bool i -> Ok (Bool i)
+  | Unit -> Ok Unit
+  | Tuple (exprs) ->
+    let+ exprs =
+      List.fold_right ~f:(fun res acc -> let* acc = acc in let+ res = res in res::acc)
+      ~init:(Ok []) @@ List.map ~f:(eval_expr' env) exprs in
+    Tuple exprs
   | Var name ->
       begin match Env.find_opt name env with
       | Some v -> Ok v

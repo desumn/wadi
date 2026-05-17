@@ -16,6 +16,7 @@ rule token = parse
   | "(*" { comment 1 lexbuf }
   | "(" {ParenOpen}
   | ")" {ParenClose}
+  | "," {Comma}
   | "=" {Equal}
   | "+" {Plus}
   | "-" {Minus}

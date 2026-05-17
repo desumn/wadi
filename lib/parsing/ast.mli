@@ -6,6 +6,8 @@ and expr_desc =
   | Var of string
   | Int of int
   | Bool of bool
+  | Unit
+  | Tuple of expr list
   | Arith of binary_arith_op * expr * expr
   | Comp of comp_op * expr * expr
   | If of expr * expr * expr

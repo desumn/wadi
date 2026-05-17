@@ -10,6 +10,8 @@ let located_bool b loc = { desc = Bool b; loc = Location.make loc }
 %token <string> Ident
 %token <bool> Bool
 
+%token Comma ","
+
 %token ParenOpen "(" ParenClose ")"
 
 %token Plus "+" Minus "-" Star "*" Slash "/" 
@@ -103,4 +105,8 @@ let atom_expr :=
   | name = Ident; <Var>
   | num = Int; <Int>
   | bool = Bool; <Bool>
+  | "("; ")"; {Unit}
   | "("; e = expr; ")"; <>
+  | "("; e = located_expr(expr); ",";
+    r = separated_nonempty_list(",", located_expr(expr)); ")";
+    {Tuple (e::r)}

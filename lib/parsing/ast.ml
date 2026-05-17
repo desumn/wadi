@@ -6,6 +6,8 @@ and expr_desc =
   | Var of string
   | Int of int
   | Bool of bool
+  | Unit
+  | Tuple of expr list
   | Arith of binary_arith_op * expr * expr
   | Comp of comp_op * expr * expr
   | If of expr * expr * expr
@@ -50,6 +52,8 @@ let rec pp_expr_at level ppf expr =
   | Var name -> Fmt.string ppf name
   | Int int -> Fmt.int ppf int
   | Bool bool -> Fmt.bool ppf bool
+  | Unit -> Fmt.string ppf "()"
+  | Tuple exprs -> Fmt.pf ppf "(%a)" (Fmt.list (pp_expr_at 0) ~sep:(Fmt.comma)) exprs
   | Arith (Add, l, r) ->
       paren_if (level > add_level) ppf @@ fun () ->
       Fmt.pf ppf "@[<2>%a +@ %a@]" (pp_expr_at add_level) l
