@@ -2,6 +2,7 @@
 type tuple_pat = { fst : pat; snd : pat; extra : pat list }
 and constr_pat = { name : string; args : pat list }
 and structural_pat =
+  | WildcardPat
   | VarPat of string
   | IntPat of int
   | BoolPat of bool
@@ -22,7 +23,7 @@ and literal =
   | ConstrLit of constr_lit
 
 and unary_operator =
-  | Minus
+  | Neg
 and unary_operation = {
   operator : unary_operator;
   operand : expr;
