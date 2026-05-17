@@ -75,6 +75,13 @@ let rec eval_expr' env (expr : Parsing.Ast.expr) =
   | Int i -> Ok (Int i)
   | Bool i -> Ok (Bool i)
   | Unit -> Ok Unit
+  | Constr (name, expr) ->
+      begin match expr with
+      | None -> Ok (Constr (name, None))
+      | Some expr ->
+          let+ expr = eval_expr' env expr in
+          Constr (name, Some expr)
+      end
   | Tuple exprs ->
       let+ exprs =
         List.fold_right
@@ -116,7 +123,7 @@ let rec eval_expr' env (expr : Parsing.Ast.expr) =
       if cond then eval_expr' env then_ else eval_expr' env else_
   | Let (pat, value, body) ->
       let* value = eval_expr' env value in
-      let new_env = Pattern.match_pattern value pat env in
+      let new_env = Pattern.match_pattern env pat value in
       begin match new_env with
       | Some new_env -> eval_expr' new_env body
       | None -> Error No_pattern_found
@@ -152,7 +159,7 @@ let rec eval_expr' env (expr : Parsing.Ast.expr) =
         List.find_map pats ~f:(fun (pat, body) ->
             Option.map
               (fun env -> (env, body))
-              (Pattern.match_pattern expr pat env))
+              (Pattern.match_pattern env pat expr))
       with
       | Some (env, body) -> eval_expr' env body
       | None -> Error No_pattern_found

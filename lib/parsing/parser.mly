@@ -145,3 +145,5 @@ let atom_expr :=
   | "("; e = located_expr(expr); ",";
     r = separated_nonempty_list(",", located_expr(expr)); ")";
     {Tuple (e::r)}
+  | name = Uident; { Constr (name, None) } 
+  | name = Uident; arg = located_expr(atom_expr); { Constr (name, Some arg) }

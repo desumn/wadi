@@ -16,6 +16,7 @@ and expr_desc =
   | App of expr * expr
   | Lambda of string * expr
   | Match of expr * (pat * expr) list
+  | Constr of string * expr option
 
 and pat = { pat_desc : pat_desc; loc : Location.t }
 
@@ -26,5 +27,6 @@ and pat_desc =
   | Int of int
   | Bool of bool
   | Tuple of pat list
+  | Constr of string * pat option
 
 val pp_expr : expr Fmt.t

@@ -16,6 +16,7 @@ and expr_desc =
   | App of expr * expr
   | Lambda of string * expr
   | Match of expr * (pat * expr) list
+  | Constr of string * expr option
 
 and pat = { pat_desc : pat_desc; loc : Location.t }
 
@@ -26,6 +27,7 @@ and pat_desc =
   | Int of int
   | Bool of bool
   | Tuple of pat list
+  | Constr of string * pat option
 
 let rec pp_pat ppf pat =
   match pat.pat_desc with
@@ -35,6 +37,7 @@ let rec pp_pat ppf pat =
   | Int i -> Fmt.int ppf i
   | Bool b -> Fmt.bool ppf b
   | Tuple pats -> Fmt.pf ppf "(%a)" (Fmt.list ~sep:Fmt.comma pp_pat) pats
+  | Constr (name, pat) -> Fmt.pf ppf "%s %a" name (Fmt.option pp_pat) pat
 
 let pp_binary_arith_op ppf op =
   match op with
@@ -124,5 +127,7 @@ let rec pp_expr_at level ppf expr =
               ~sep:(fun ppf () -> Fmt.pf ppf " -> ")
               pp_pat (pp_expr_at 0)))
         patterns
+  | Constr (name, expr) ->
+      Fmt.pf ppf "[@<2>%s@ %a@]" name (Fmt.option (pp_expr_at 0)) expr
 
 let pp_expr = pp_expr_at 0
