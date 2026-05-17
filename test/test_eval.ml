@@ -66,4 +66,48 @@ let eval_cases =
          "let rec fib = fun n -> if n < 2 then n else fib (n - 1) + fib (n - \
           2) in fib 10")
       (Ok (Int 55));
+    eval_case "tuple" (parse "(1, 2)") (Ok (Tuple [ Int 1; Int 2 ]));
+    eval_case "unit" (parse "()") (Ok Unit);
+    eval_case "nested tuple" (parse "(1, (true, 3))")
+      (Ok (Tuple [ Int 1; Tuple [ Bool true; Int 3 ] ]));
+    eval_case "match int literal"
+      (parse "match 1 with | 1 -> 10 | _ -> 0")
+      (Ok (Int 10));
+    eval_case "match falls through"
+      (parse "match 5 with | 1 -> 10 | 2 -> 20 | _ -> 99")
+      (Ok (Int 99));
+    eval_case "match wildcard binds nothing"
+      (parse "match 5 with | _ -> 42")
+      (Ok (Int 42));
+    eval_case "match var binds"
+      (parse "match 42 with | n -> n + 1")
+      (Ok (Int 43));
+    eval_case "match bool"
+      (parse "match true with | true -> 1 | false -> 0")
+      (Ok (Int 1));
+    eval_case "match tuple destructure"
+      (parse "match (1, 2) with | (a, b) -> a + b")
+      (Ok (Int 3));
+    eval_case "match nested tuple"
+      (parse "match (1, (2, 3)) with | (a, (b, c)) -> a + b + c")
+      (Ok (Int 6));
+    eval_case "match mixed pattern"
+      (parse "match (1, 2) with | (1, x) -> x | _ -> 0")
+      (Ok (Int 2));
+    eval_case "match wrong tuple length is fall-through"
+      (parse "match (1, 2, 3) with | (a, b) -> 0 | (a, b, c) -> a + b + c")
+      (Ok (Int 6));
+    eval_case "match no branch"
+      (parse "match 5 with | 1 -> 10 | 2 -> 20")
+      (Error No_pattern_found);
+    eval_case "let tuple destructure"
+      (parse "let (x, y) = (1, 2) in x + y")
+      (Ok (Int 3));
+    eval_case "let nested destructure"
+      (parse "let (a, (b, c)) = (1, (2, 3)) in a + b + c")
+      (Ok (Int 6));
+    eval_case "let wildcard" (parse "let _ = 999 in 42") (Ok (Int 42));
+    eval_case "let destructure mismatch"
+      (parse "let (a, b) = 1 in a + b")
+      (Error No_pattern_found);
   ]
