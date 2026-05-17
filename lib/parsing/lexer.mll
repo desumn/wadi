@@ -6,9 +6,12 @@ exception Lexing_error of (string * Lexing.position)
 }
 
 let digit   = ['0'-'9']
-let letter  = ['a'-'z' 'A'-'Z']
-let ident   = letter (letter | digit | '_')*
-let number = digit (digit)*
+let lowercase = ['a'-'z']
+let uppercase = ['A'-'Z']
+let letter  = lowercase | uppercase
+let lident   = lowercase (letter | digit | '_')*
+let uident   = uppercase (letter | digit | '_')*
+let number  = digit (digit)*
 
 rule token = parse
   | [' ' '\t' '\r']+ { token lexbuf }
@@ -44,7 +47,8 @@ rule token = parse
   | "match" {Match}
   | "with" {With}
   | number as num {Int (int_of_string num)}
-  | ident as ident {Ident ident}
+  | lident as ident {Lident ident}
+  | uident as ident {Uident ident}
   | eof {Eof}
   | _ as c {raise (Lexing_error ("Not handled: " ^ String.make 1 c, Lexing.lexeme_start_p lexbuf))}
 and comment depth = parse

@@ -7,7 +7,8 @@ let located_bool b loc = { expr_desc = Bool b; loc = Location.make loc }
 
 %}
 %token <int> Int
-%token <string> Ident
+%token <string> Lident
+%token <string> Uident
 %token <bool> Bool
 
 %token Comma ","
@@ -55,7 +56,7 @@ let open_expr :=
   | Let; pat = located_pat(pat); "=";
     value = located_expr(expr); In; body = located_expr(expr);
     { Let (pat, value, body) }
-  | Let; name = Ident; arg1 = Ident; args = Ident*; "=";
+  | Let; name = Lident; arg1 = Lident; args = Lident*; "=";
     value = located_expr(expr); In; body = located_expr(expr);
     {
       let args = arg1 :: args in
@@ -64,14 +65,14 @@ let open_expr :=
       let pat = { pat_desc = Var name; loc = Location.make $loc } in
       Let (pat, value, body)
     }
-  | Let; Rec; name = Ident; args = Ident*; "=";
+  | Let; Rec; name = Lident; args = Lident*; "=";
     value = located_expr(expr); In; body = located_expr(expr);
     {
       let value = List.fold_right args ~init:value
         ~f:(fun arg value -> {value with expr_desc = Lambda(arg, value)}) in
       LetRec (name, value, body)
     }
-  | Fun; param = Ident; "->"; body = located_expr(expr); <Lambda>
+  | Fun; param = Lident; "->"; body = located_expr(expr); <Lambda>
   | If; cond = located_expr(expr); Then; then_ = located_expr(expr); Else; else_ = located_expr(expr); <If>
   | Match; e = located_expr(expr); With; bs = match_branches;
     { Match (e, bs) }
@@ -87,7 +88,7 @@ let pat :=
     { Tuple (p :: ps) }
 let atomic_pat :=
   | "_"; { Wildcard }
-  | name = Ident; <Var>
+  | name = Lident; <Var>
   | n = Int; <Int>
   | b = Bool; <Bool>
   | "("; ")"; { Unit }
@@ -136,7 +137,7 @@ let app_expr :=
   | ~ = atom_expr; <>
 
 let atom_expr :=
-  | name = Ident; <Var>
+  | name = Lident; <Var>
   | num = Int; <Int>
   | bool = Bool; <Bool>
   | "("; ")"; {Unit}
