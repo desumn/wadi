@@ -5,9 +5,9 @@ exception Parse_error of string * Location.t
 
 module I = Parser.MenhirInterpreter
 
-let succeed (ast : Ast.expr) = ast
+let succeed (ast : Ast.program) = ast
 
-let fail (lexbuf : Lexing.lexbuf) (checkpoint : Ast.expr I.checkpoint) =
+let fail (lexbuf : Lexing.lexbuf) (checkpoint : Ast.program I.checkpoint) =
   match checkpoint with
   | I.HandlingError env ->
       (* let state_num = I.current_state_number env in *)
