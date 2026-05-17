@@ -28,6 +28,7 @@ let located_bool b loc = { expr_desc = Bool b; loc = Location.make loc }
 %token Let Rec In
 
 %token Match With
+%token End
 
 %token If Then Else
 
@@ -74,7 +75,7 @@ let open_expr :=
     }
   | Fun; param = Lident; "->"; body = located_expr(expr); <Lambda>
   | If; cond = located_expr(expr); Then; then_ = located_expr(expr); Else; else_ = located_expr(expr); <If>
-  | Match; e = located_expr(expr); With; bs = match_branches;
+  | Match; e = located_expr(expr); With; bs = match_branches; End;
     { Match (e, bs) }
 
 let match_branches :=
@@ -91,6 +92,8 @@ let atomic_pat :=
   | name = Lident; <Var>
   | n = Int; <Int>
   | b = Bool; <Bool>
+  | name = Uident; { Constr (name, None) } 
+  | name = Uident; arg = located_pat(pat); { Constr (name, Some arg) }
   | "("; ")"; { Unit }
   | "("; ~ = pat; ")"; <>
 

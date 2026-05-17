@@ -15,10 +15,12 @@ let rec match_pattern env (pattern : Parsing.Ast.pat) (value : Value.value) =
             Option.bind env_opt (fun env -> match_pattern env pat value))
           pats values
   | Constr (pname, vpat), Constr (name, value) ->
-      begin match (vpat, value) with
-      | None, None -> Some env
-      | Some _, None -> None
-      | None, Some _ -> None
-      | Some pat, Some value -> match_pattern env pat value
-      end
+      if pname <> name then None
+      else
+        begin match (vpat, value) with
+        | None, None -> Some env
+        | Some _, None -> None
+        | None, Some _ -> None
+        | Some pat, Some value -> match_pattern env pat value
+        end
   | _, _ -> None

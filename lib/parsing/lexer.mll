@@ -46,6 +46,7 @@ rule token = parse
   | "else" {Else}
   | "match" {Match}
   | "with" {With}
+  | "end" {End}
   | number as num {Int (int_of_string num)}
   | lident as ident {Lident ident}
   | uident as ident {Uident ident}
