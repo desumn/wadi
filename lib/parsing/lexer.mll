@@ -17,6 +17,7 @@ rule token = parse
   | [' ' '\t' '\r']+ { token lexbuf }
   | '\n' { Lexing.new_line lexbuf; token lexbuf }
   | "(*" { comment 1 lexbuf }
+  | "//" { line_comment lexbuf }
   | "(" {ParenOpen}
   | ")" {ParenClose}
   | "," {Comma}
@@ -58,3 +59,7 @@ and comment depth = parse
   | '\n' { Lexing.new_line lexbuf; comment depth lexbuf }
   | eof { raise (Lexing_error ("eof in comment", Lexing.lexeme_start_p lexbuf)) }
   | _ { comment depth lexbuf }
+and line_comment = parse
+  | '\n' { Lexing.new_line lexbuf; token lexbuf }
+  | eof  { Eof }
+  | _    { line_comment lexbuf }
