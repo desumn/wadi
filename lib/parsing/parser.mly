@@ -1,7 +1,7 @@
 %{
 open Ast
 
-let mk_loc loc = Location.make loc
+let mk_loc loc = Location.make loc false
 
 let lit loc literal =
   Lit { literal; loc = mk_loc loc }
@@ -90,9 +90,9 @@ let program :=
 
 let top_item :=
   | Let; b = let_destruct_binding;
-    { LetTop { let_top = (LetTopDestruct b); loc = Location.make $loc } }
+    { LetTop { let_top = (LetTopDestruct b); loc = Location.make $loc false } }
   | Let; b = let_fun_binding;
-    { LetTop { let_top = (LetTopFun b); loc = Location.make $loc }}
+    { LetTop { let_top = (LetTopFun b); loc = Location.make $loc false }}
   | Do; e = expr; End;
     { top_expr $loc e }
 

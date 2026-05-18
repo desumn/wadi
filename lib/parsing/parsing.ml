@@ -16,7 +16,7 @@ let fail (lexbuf : Lexing.lexbuf) (checkpoint : Ast.program I.checkpoint) =
         | msg -> msg
         | exception Not_found -> "syntax error (no message found)"
       in
-      raise (Parse_error (msg, Location.from_lexbuf lexbuf))
+      raise (Parse_error (msg, Location.from_lexbuf lexbuf false))
   | _ -> assert false
 
 let supplier (lexbuf : Lexing.lexbuf) () =

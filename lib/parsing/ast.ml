@@ -95,3 +95,14 @@ and top =
   | LetTop of { let_top : let_top; loc : Location.t }
 
 and program = top list
+
+let loc_of_expr expr =
+  match expr with
+  | Lit { loc }
+  | UnaryOperation { loc }
+  | BinaryOperation { loc }
+  | If { loc }
+  | Match { loc }
+  | Lambda { loc }
+  | App { loc }
+  | Let { loc } -> loc
