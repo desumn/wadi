@@ -52,6 +52,7 @@ rule token = parse
   | "with" {With}
   | "begin" {Begin}
   | "end" {End}
+  | "do" {Do}
   | number as num {Int (int_of_string num)}
   | lident as ident {Lident ident}
   | uident as ident {Uident ident}

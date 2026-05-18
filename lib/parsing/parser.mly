@@ -77,7 +77,7 @@ let top_expr loc expr =
 %token Let Rec In
 %token If Then Else
 %token Fun
-%token Match With Begin End
+%token Match With Do Begin End
 
 %token Eof
 
@@ -93,7 +93,7 @@ let top_item :=
     { LetTop { let_top = (LetTopDestruct b); loc = Location.make $loc } }
   | Let; b = let_fun_binding;
     { LetTop { let_top = (LetTopFun b); loc = Location.make $loc }}
-  | Begin; e = expr; ";"; End;
+  | Do; e = expr; End;
     { top_expr $loc e }
 
 let let_destruct_binding :=
