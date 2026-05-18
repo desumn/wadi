@@ -1,4 +1,8 @@
-type t = private { start : Lexing.position; end_ : Lexing.position; is_ghost : bool }
+type t = private {
+  start : Lexing.position;
+  end_ : Lexing.position;
+  is_ghost : bool;
+}
 
 val make : Lexing.position * Lexing.position -> bool -> t
 val from_lexbuf : Lexing.lexbuf -> bool -> t
