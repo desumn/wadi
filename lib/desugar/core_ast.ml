@@ -77,12 +77,14 @@ and desugar_let_fun { name; is_rec; params; value } =
     name;
     is_rec;
     value =
-      desugar_expr
-        (Lambda
-           {
-             loc = Location.set_ghost @@ Ast.loc_of_expr value;
-             lambda = { params; body = value };
-           });
+      (if not (params = []) then
+         desugar_expr
+           (Lambda
+              {
+                loc = Location.set_ghost @@ Ast.loc_of_expr value;
+                lambda = { params; body = value };
+              })
+       else desugar_expr value);
   }
 
 and desugar_app { left; right } =
@@ -90,7 +92,7 @@ and desugar_app { left; right } =
 
 and desugar_lambda { params; body } =
   let params = List.rev params in
-  List.fold_left params
+  List.fold_left (List.tl params)
     ~init:{ param = List.hd params; body = desugar_expr body }
     ~f:(fun acc_lambda param ->
       { param; body = Lambda { loc = Location.dummy; lambda = acc_lambda } })
