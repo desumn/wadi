@@ -21,6 +21,7 @@ rule token = parse
   | "(" {ParenOpen}
   | ")" {ParenClose}
   | "," {Comma}
+  | ";" {Semi}
   | "=" {Equal}
   | "+" {Plus}
   | "-" {Minus}
@@ -49,6 +50,7 @@ rule token = parse
   | "else" {Else}
   | "match" {Match}
   | "with" {With}
+  | "begin" {Begin}
   | "end" {End}
   | number as num {Int (int_of_string num)}
   | lident as ident {Lident ident}

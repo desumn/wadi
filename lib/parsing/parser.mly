@@ -54,14 +54,13 @@ let top_expr loc expr =
   ExprTop expr
 %}
 
-
 %token <int> Int
 %token <bool> Bool
 %token <string> Lident
 %token <string> Uident
 
 %token ParenOpen "(" ParenClose ")"
-%token Comma ","
+%token Comma "," Semi ";"
 %token Bar "|"
 %token Underscore "_"
 %token Arrow "->"
@@ -78,7 +77,7 @@ let top_expr loc expr =
 %token Let Rec In
 %token If Then Else
 %token Fun
-%token Match With End
+%token Match With Begin End
 
 %token Eof
 
@@ -94,7 +93,7 @@ let top_item :=
     { LetTop { let_top = (LetTopDestruct b); loc = Location.make $loc } }
   | Let; b = let_fun_binding;
     { LetTop { let_top = (LetTopFun b); loc = Location.make $loc }}
-  | e = expr;
+  | Begin; e = expr; ";"; End;
     { top_expr $loc e }
 
 let let_destruct_binding :=
