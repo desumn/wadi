@@ -39,12 +39,12 @@ and program = top list
 let rec desugar (top : Ast.top) : top =
   match top with
   | ExprTop e -> ExprTop (desugar_expr e)
-  | LetTop lt -> LetTop { let_top = desugar_let_top lt.let_top; loc = lt.loc }
+  | LetTop lt -> LetTop { let_top = desugar_let_top lt.let_top lt.loc; loc = lt.loc }
 
-and desugar_let_top (let_top : Ast.let_top) =
+and desugar_let_top (let_top : Ast.let_top) loc =
   match let_top with
   | LetTopDestruct ld -> LetTopDestruct (desugar_let_destruct ld)
-  | LetTopFun lf -> LetTopBind (desugar_let_fun lf)
+  | LetTopFun lf -> LetTopBind (desugar_let_fun lf loc)
 
 and desugar_expr (expr : Ast.expr) =
   match expr with
@@ -54,11 +54,11 @@ and desugar_expr (expr : Ast.expr) =
   | If { if_expr; loc } -> If { if_expr = desugar_if_expr if_expr; loc }
   | Match { match_expr; loc } ->
       Match { match_expr = desugar_match_expr match_expr; loc }
-  | Lambda { lambda; loc } -> Lambda { lambda = desugar_lambda lambda; loc }
+  | Lambda { lambda; loc } -> Lambda { lambda = desugar_lambda lambda loc; loc }
   | App { app; loc } -> App { app = desugar_app app; loc }
-  | Let { let_expr; loc } -> Let { let_expr = desugar_let_expr let_expr; loc }
+  | Let { let_expr; loc } -> Let { let_expr = desugar_let_expr let_expr loc; loc }
 
-and desugar_let_expr (let_expr : Ast.let_expr) =
+and desugar_let_expr (let_expr : Ast.let_expr) loc =
   match let_expr with
   | LetDestruct { let_destruct; body } ->
       LetDestruct
@@ -67,12 +67,12 @@ and desugar_let_expr (let_expr : Ast.let_expr) =
           body = desugar_expr body;
         }
   | LetFun { let_fun; body } ->
-      LetBind { let_bind = desugar_let_fun let_fun; body = desugar_expr body }
+      LetBind { let_bind = desugar_let_fun let_fun loc; body = desugar_expr body }
 
 and desugar_let_destruct { pattern; value } =
   { pattern; value = desugar_expr value }
 
-and desugar_let_fun { name; is_rec; params; value } =
+and desugar_let_fun { name; is_rec; params; value } loc =
   {
     name;
     is_rec;
@@ -81,7 +81,7 @@ and desugar_let_fun { name; is_rec; params; value } =
          desugar_expr
            (Lambda
               {
-                loc = Location.set_ghost @@ Ast.loc_of_expr value;
+                loc = Location.set_ghost @@ loc;
                 lambda = { params; body = value };
               })
        else desugar_expr value);
@@ -90,12 +90,12 @@ and desugar_let_fun { name; is_rec; params; value } =
 and desugar_app { left; right } =
   { left = desugar_expr left; right = desugar_expr right }
 
-and desugar_lambda { params; body } =
+and desugar_lambda { params; body } loc =
   let params = List.rev params in
   List.fold_left (List.tl params)
     ~init:{ param = List.hd params; body = desugar_expr body }
     ~f:(fun acc_lambda param ->
-      { param; body = Lambda { loc = Location.dummy; lambda = acc_lambda } })
+      { param; body = Lambda { loc = Location.set_ghost loc; lambda = acc_lambda } })
 
 and desugar_match_expr { scrutinee; cases } =
   {
@@ -117,7 +117,7 @@ and desugar_unary_op { operator; operand } loc =
       loc;
       app =
         {
-          left = Lit { loc = Location.dummy; literal = VarLit op_name };
+          left = Lit { loc = Location.set_ghost loc; literal = VarLit op_name };
           right = desugar_expr operand;
         };
     }
@@ -132,7 +132,7 @@ and desugar_binary_op { operator; left; right } loc =
             {
               cond = desugar_expr left;
               then_ = desugar_expr right;
-              else_ = Lit { loc = Location.dummy; literal = BoolLit false };
+              else_ = Lit { loc = Location.set_ghost loc; literal = BoolLit false };
             };
         }
   | Or ->
@@ -142,7 +142,7 @@ and desugar_binary_op { operator; left; right } loc =
           if_expr =
             {
               cond = desugar_expr left;
-              then_ = Lit { loc = Location.dummy; literal = BoolLit true };
+              then_ = Lit { loc = Location.set_ghost loc; literal = BoolLit true };
               else_ = desugar_expr right;
             };
         }
@@ -151,10 +151,10 @@ and desugar_binary_op { operator; left; right } loc =
       let inner =
         App
           {
-            loc = Location.dummy;
+            loc = Location.set_ghost loc;
             app =
               {
-                left = Lit { loc = Location.dummy; literal = VarLit op_name };
+                left = Lit { loc = Location.set_ghost loc; literal = VarLit op_name };
                 right = desugar_expr left;
               };
           }
